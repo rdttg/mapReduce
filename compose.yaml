@@ -1,0 +1,44 @@
+x-common: &common
+  build: .
+  healthcheck:
+    test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+    interval: 5s
+    timeout: 2s
+    retries: 3
+x-env: &env
+  PEERS: '{"1":"http://node1:8000","2":"http://node2:8000","3":"http://node3:8000"}'
+  HEARTBEAT_INTERVAL: "2"
+  FAILURE_TIMEOUT: "6"
+services:
+  node1:
+    <<: *common
+    environment:
+      <<: *env
+      NODE_ID: "1"
+    volumes:
+      - data1:/data
+  node2:
+    <<: *common
+    environment:
+      <<: *env
+      NODE_ID: "2"
+    volumes:
+      - data2:/data
+  node3:
+    <<: *common
+    environment:
+      <<: *env
+      NODE_ID: "3"
+    volumes:
+      - data3:/data
+  dashboard:
+    build: .
+    environment:
+      <<: *env
+    command: ["uvicorn", "dashboard:app", "--host", "0.0.0.0", "--port", "8080"]
+    ports:
+      - "8080:8080"
+volumes:
+  data1:
+  data2:
+  data3:
